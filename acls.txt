@@ -1,0 +1,110 @@
+setfacl -b File/Dir
+where -b: removes all ACL's info of given file/Dir
+
+Removing Default ACLs"-
+=====================
+Syntax: setfacl -k file/Dir
+
+Removing specific ACL entry:-
+setfacl -x u:username File/DirName
+
+
+getting ACL;s to be saved into a file:-
+
+
+getfacl  xyz.txt > file.txt
+
+Apply ACLs on a file using previously saved ACL file.
+
+setfacl --set-file=acl.out Filename
+Example:
+getfacl  xyz.txt > dinesh.out
+cat dinesh.out
+touch din.txt
+setfacl --set-file=dinesh.out din.txt
+getfacl din.txt
+
+Setting ACLs of one file to another:
+Syntax:-
+getfacl onefile.txt | setfacl --set-file=- anotherfile.txt
+wehere - used in --set-file refers to dummy file.
+
+Example: Apply xyz.txt ACLs on mo.txt
+touch mo.txt
+getfacl xyz.txt | setfacl --set-file=- mo.txt
+
+Note:-
+
+Setting up ACLs:
+setfacl -m u:username:rwx file/dir
+setfacl -m g:gropname:rwx file/dir
+setfacl -m u:username:rwx,g:groupname:rwx file/dir
+setfacl -R -m u:username:rwx,g:group:rwx o::rwx Dir
+setfacl -d -m u:user:rwx,g:rwx Dir
+setfacl -m m:rwx Fie/Dir
+
+Where -m : modify
+      -d : default ACLs
+      -R : Apply ACLs recursively
+      -m : mask entry
+       u: user, g: group, o: others
+Viewing ACLs:
+getfacl File/Dir
+Save ACLs into a file:
+getfacl File/Dir > filename
+
+Apply ACLs on a file or Dir that are saved in a file:
+setfacl --set-file=Filename File/Dir
+
+Apply ACLs of one file/dir to another
+getfacl File/Dir | setfacl --set-file=- File/Dir
+Note:-
+chmod command has no effect on any group permission for file with ACL Setting, however, it updates the ACL mask.
+
+To add or modify other ACLs:
+                 -----
+ACL's otehr and standard other permissions and quivalent. So using chmod on other permissions is equivalant using 'setfacl' on other other option. Example:
+	setfacl -m o::rw- xyz.txt is same as
+        chmod o=rw- xyz.txt
+You can add multiple entries vi same setfacl command suing commma seperation for each entry as below:
+  setfacl -m u:ksrinath:rw-,g:winners:r-x,g:sales:-,o::- xyz.txt
+The above command sets named user ksrinath with rw- and named group winners with r-x, and named group sales and others with no permissions.
+
+Solve the below example:-
+------------------------
+1.create group called 'sodor'
+  create a user called james
+  create a group called
+	a) bakerstreet
+        b) scotlandyard
+
+  create users lestrade, gregson, jones as part of scotlandyard
+  create users holmes, watson as part of bakerstreet
+
+a) add named ACLs to the steamies directory and all of its contents
+   i)grant the sodor group read, write and conditional execute permissions.
+  ii)update steamies directory, denying the user james from mthe sodor group any access
+b) add named ACLs as default ACLs to support future file and directory additions
+   i)add deffault access rule for the sodor group, grant read write and executed permissions on the steamies directory.
+  ii) add default access rule for the user james. Deny all access to the steamies directory
+2)
+  The Baker street detective agnency is setting up a collaborative shaare directory to hold case files which members of the beakerstreet group willhave reaad and write permission on.
+
+The lead detective, sherlock Holmes, has decided that memebres of the scotlandyard group should also be able to read and write to the shared directory. However, Holmes thinks that Inspector Peter Jones (a member of the scotlandyard group) is an imbecile, and as such Jones should have his access to the directory restricted to read only.
+
+Mrs. Hudson has limited linux skills and wass only able to create the share directroy and copy some ;files into it. Being tea time, she has asked you to coplete dthe job, while she organizeds tea and biscuits for Holmes and Watson.
+
+Your task is to complete the setupof the share directory. The directory and all of its contents should be owned by the bakerstreet group, whith the files updated to read and write for the owner and group (bakerstreet). Otherusers should have no permission. You also need to provide read and write permissions for the scotlandyard group, with the exception of jones, who only gets read permissions. Make sure your setup applies to existing and future files.
+
+Important Information:-
+--> Share directory: /shares/cases
+-->bakerstreet group: holmes, watson
+-->scotlandyard group: lestrade, gregson, jones
+-->two files exists in the directory: adventures.txt and moriarty.txt
+-->All five users password are redhat
+-->All changes should occur to directory cases and its files; do not adjust the shares directory.
+
+ i)The cases directory and its content should belong to group bakerstreet. New files added in tht cases direcdtory should automatically belonng to the group bakerstreet. Exising files should be set to rw for user and group
+ii)Add ACs to the cases directory (and its contents) that allow members of the scotlandyard group to have read and writte access on the files and execute on the directory. Restrict user jones to read access on the files and execute on the directory.
+iii)Add ACLs that enusre any new file or directory in the cases directory haave the correct permission applied for ALL authoruzed users and groups.
+iv)Verify that you have made your ACL and file system changes correctly.
