@@ -1,0 +1,134 @@
+Automount
+
+Kernel Extension:-
+The kernel extension is a machanism as a means of dynamic loading of pieces of code in the kernel without need of recompilation of the kernel. These pieces of code is generally known as plug-Ins or Kernel extensions.
+How to install autofs:-
+yum install autofs -y
+Daemons/Command required to configure autofs:-
+usr/sbin/automount:-
+automount daemon is responsible for autofs. autofs is a service and can be controlled with commands
+systemctl is-enabled autofs
+disabled
+systemctl enable autofs
+systemctl start autofs
+systemctl status autofs
+systemctl restart autofs
+systemctl stop autofs
+
+Whenever an autofs mount is not accessed withing an appropriate interval (default 10 mins), the automount unmounts the NFS mount.
+
+Automount command:-
+It is used as an administration tool to autofs. This command process any entries or any changes made to auto_master or map file.
+
+	 	automount -v 
+			where -v : verbose
+Note:-  /etc/auto.master is a configuration file to configure automounts. If this file exists, upon server boot, automountd daemon is started automatically.
+/etc/auto.master consists of syntax which specifies a directory from where it is mounted for indirect or direct map.
+
+Maps:-
+Maps specify the mount points should be automatically mounted, when they access and what should be mounted over those mount points. The format of /etc/auto.master is :
+
+ 		/key	/path/to/mapFile	Options   
+
+where /key refers to the directory name and /- refers to dummy directory.
+Automount daemon invokes automount command to process autofs mounts.
+Direct maps require a special key ( /- ) in the /etc/auto.master file and the map file mentioned with a directory and the remote server, remote directory to be used to mount.
+/dirName	Options		ServerName:/exportedFSName
+Indirect Map:-
+  The inderect map have following format:
+	IndirectKey	 [Options]	ServerName:/expredfs
+  Indirect Mapping is used when we want to use large number of entries to be associated with single directory (Such as users home directory)
+  Direct maps associates the filesystem locations directly with directory. In this case auto.master should have a dummy directory ( /- )
+Examples of Map files:
+[root@mkoduru blue]# cat /etc/colors.map
+blue    192.168.4.77:/colors/blue
+red     192.168.4.77:/colors/red
+green   192.168.4.77:/colors/green
+white   192.168.4.77:/colors/white
+yellow  192.168.4.77:/colors/yellow
+[root@mkoduru blue]# cat /etc/sap.map
+#Direct Mounts
+#Below is an NFS auto mount
+/mysap                                                  192.168.4.77:/sap
+#Below is samba auto mount
+/mysmbshare     -fstype=cifs,credentials=/etc/smb.cred  ://192.168.4.77/smbshare
+#Below is DVD automount
+/sap            -fstype=iso9660,ro                      :/dev/cdrom
+[root@mkoduru blue]# tail /etc/auto.master
+#
+# Note that if there are entries for /net or /misc (as
+# above) in the included master map any keys that are the
+# same will not be seen as the first read key seen takes
+# precedence.
+#
++auto.master
+/colors /etc/color.map
+/-        /etc/sap.map
+
+
+Working Notes:
+Assume my dns server is 192.168.2.45, and all server name resolutions are set properly. Here is /etc/auto.master enteries. Please note that all home directories and /sap are exported to *.student.in in mytrainer.student.in server(192.168.2.45).
+When working with home directories mount, make sure to unmount /home and remove /home directory as well. Automount will takecare of mount point creation and deletion.
+
+[root@muktha sap]# cat /etc/maps_home
+machinas        trainer.student.in:/home/machinas
+mukthaks        trainer.student.in:/home/mukthaks
+sudhaa          trainer.student.in:/home/sudhaa
+praveenkr       trainer.student.in:/home/praveenkr
+mkashala        trainer.student.in:/home/mkashala
+vramagiri       trainer.student.in:/home/vramagiri
+ppamula         trainer.student.in:/home/ppamula
+arunmahi        trainer.student.in:/home/arunmahi
+rajaraja        trainer.student.in:/home/rajaraja
+miriyala        trainer.student.in:/home/miriyala
+daravath        trainer.student.in:/home/daravath
+vamsikr         trainer.student.in:/home/vamsikr
+jagadg          trainer.student.in:/home/jagadg
+[root@muktha sap]# cat /etc/app_map
+/sap            mytrainer.student.in:/sap
+/myapp  -fstype=xfs     :/dev/sharevg/applv
+/mnt    -fstype=iso9660,ro      :/dev/cdrom
+[root@muktha sap]# cat /etc/auto.master | grep -v ^#
+/misc   /etc/auto.misc
+/net    -hosts
++dir:/etc/auto.master.d
++auto.master
+/home /etc/maps_home
+/-    /etc/app_map
+Below is /etc/exports file in mytrainer.student.in
+[labadmin@mytrainer ~]$ cat /etc/exports
+/sap    *.student.in(rw,sec=sys,sync)
+/images/datastore       *(rw,sec=sys,sync)
+/home/machinas  *.student.in(rw,sync,sec=sys)
+/home/mukthaks  *.student.in(rw,sync,sec=sys)
+/home/sudhaa    *.student.in(rw,sync,sec=sys)
+/home/praveenkr *.student.in(rw,sync,sec=sys)
+/home/mkashala  *.student.in(rw,sync,sec=sys)
+/home/vramagiri *.student.in(rw,sync,sec=sys)
+/home/ppamula   *.student.in(rw,sync,sec=sys)
+/home/arunmahi  *.student.in(rw,sync,sec=sys)
+/home/rajaraja  *.student.in(rw,sync,sec=sys)
+/home/miriyala  *.student.in(rw,sync,sec=sys)
+/home/daravath  *.student.in(rw,sync,sec=sys)
+/home/vamsikr   *.student.in(rw,sync,sec=sys)
+/home/jagadg    *.student.in(rw,sync,sec=sys)
+
+Hard Mount for NFS at client side:-
+-------------------------------------------
+hard mount:- When you mount nfs share using hard mount option(by default it is hard mount), nfs tries to access a hard-mounted directory, it keeps trying until it succeeds or someone interrupts its attempts. 
+If the NFS server goes down, any proceses using the moutnted directory hang until the server comes back and then continue processing without errors. Interruptable hard mounts may be interrupted with ctr-C
+Soft Mount:-
+------------
+Specify this option if the server is unreliable and you want to prevent systems from hanging when the server is down. When NFS tries to access a soft-mounted directory, it gives up and returns an error message after trying retrans times (retrans is an opton where you set, how many times the NFS client tries for the NFS server)
+intr:-
+------
+if intr option is enabled in /etc/fstab for nfs mount,  users may press ctr-C to interrupt an NFS mount that is haging indefinitely because of NFS server down. intr is default option.
+nointr:-
+if nointr option is enabled in /etc/fstab for nfs mount, the NFS client will not respond to ctrl-C to interrupt the nfs mount. 
+Below is sample entry:
+mytrainer.student.in:/sap       /newsap         nfs     defaults,hard,nointr,bg    0 0
+
+Note:- The intr / nointr mount option is deprecated after kernel 2.6.25. 
+
+
+
